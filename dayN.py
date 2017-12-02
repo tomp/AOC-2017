@@ -14,18 +14,19 @@ def load_input(infile):
                 lines.append(line)
         return lines
 
-# Example
+# PART 1
 
 def example():
     print('= ' * 32)
-
-# PART 1
 
 def part1(lines):
     print('= ' * 32)
 
 
 # PART 2
+
+def example2():
+    print('= ' * 32)
 
 def part2(lines):
     print('= ' * 32)
@@ -34,4 +35,5 @@ if __name__ == '__main__':
     example()
     # input = load_input(INPUTFILE)
     # part1(input)
+    # example2()
     # part2(input)
