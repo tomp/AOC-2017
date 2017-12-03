@@ -23,19 +23,16 @@ def checksum(sheet):
 
 def checksum2(sheet):
     result = 0
-
     def row_value(items):
         for i, a in enumerate(items[:-1]):
             for b in items[i+1:]:
                 if a % b == 0:
                     return a // b
-        raise ValueError("No divisible pair found in {}".format(items))
-                    
+        raise ValueError("No divisible pair found in {}".format(items))                 
     for row in sheet.splitlines():
         vals = sorted([int(item.strip()) for item in row.strip().split()],
                 reverse=True)
         result += row_value(vals)
-
     return result
 
 # PART 1
@@ -68,7 +65,6 @@ def example2():
     result = checksum2(sheet)
     print("result = {} (expected {})".format(result, expected))
     assert result == expected
-    print('= ' * 32)
     print('= ' * 32)
 
 def part2(lines):
