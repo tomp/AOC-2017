@@ -14,9 +14,19 @@ def load_input(infile):
                 lines.append(line)
         return lines
 
+def solve(arg):
+    """Solve the problem."""
+    pass
+
 # PART 1
 
 def example():
+    cases = [('arg1', 'expected1'),
+             ('arg2', 'expected2')]
+    for arg, expected in cases:
+        result = solve(arg)
+        print("'{}' -> {} (expected {})".format(arg, result, expected))
+        assert result == expected
     print('= ' * 32)
 
 def part1(lines):
