@@ -5,6 +5,11 @@
 
 INPUTFILE = 'input.txt'
 
+def sample_input():
+    return ""
+
+# Utility functions
+
 def load_input(infile):
     lines = []
     with open(infile, 'r') as fp:
@@ -13,6 +18,16 @@ def load_input(infile):
             if line:
                 lines.append(line)
         return lines
+
+def split_nonblank_lines(text):
+    lines = []
+    for line in text.splitlines():
+        line = line.strip()
+        if line:
+            lines.append(line)
+    return lines
+
+# Solution
 
 def solve(arg):
     """Solve the problem."""
@@ -30,6 +45,8 @@ def example():
     print('= ' * 32)
 
 def part1(lines):
+    result = solve(lines)
+    print("result is {})".format(result))
     print('= ' * 32)
 
 
