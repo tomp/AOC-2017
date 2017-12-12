@@ -46,7 +46,7 @@ def example():
 
 def part1(lines):
     result = solve(lines)
-    print("result is {})".format(result))
+    print("result is {}".format(result))
     print('= ' * 32)
 
 
