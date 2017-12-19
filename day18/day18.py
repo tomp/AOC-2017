@@ -6,20 +6,6 @@ from collections import defaultdict, namedtuple
 
 INPUTFILE = 'input.txt'
 
-def sample_input():
-    text = """
-set a 1
-add a 2
-mul a a
-mod a 5
-snd a
-set a 0
-rcv a
-jgz a -1
-set a 1
-jgz a -2
-"""
-    return split_nonblank_lines(text)
 
 # Utility functions
 
@@ -52,15 +38,20 @@ def parse_value(token):
     else:
         return Value(reg="", val=int(token))
 
-class Program():
+class SoundProgram():
     def __init__(self, lines=None):
         self.ins = []
         self.size = 0
+        self.recover = 0
         self.pc = 0
         self.reg = defaultdict(int)
         self.sound = 0
         if lines:
             self.load_program(lines)
+
+    def __repr__(self):
+        return "<Program pc={}/{} sound={}>".format(self.pc, self.size,
+                self.sound)
 
     def load_program(self, lines):
         for line in lines:
@@ -94,6 +85,10 @@ class Program():
     def run(self, recover=False):
         while self.pc >= 0 and self.pc < self.size:
             self.step(recover)
+            if self.recover:
+                return self.recover
+        return ""
+
 
     def step(self, recover=False):
         try:
@@ -103,7 +98,7 @@ class Program():
                 self.pc += 1
             elif ins[0] == 'rcv':
                 if self._value(ins[1]) and recover:
-                    return self.sound
+                    self.recover = self.sound
                 self.pc += 1
             elif ins[0] == 'set':
                 self.reg[ins[1]] = self._value(ins[2])
@@ -120,26 +115,140 @@ class Program():
             elif ins[0] == 'jgz':
                 if self._value(ins[1]):
                     self.pc += self._value(ins[2])
+                else:
+                    self.pc += 1
         except IndexError:
-            return None
+            pass
+        return self
 
-def solve(arg):
-    """Solve the problem."""
-    pass
+class DuetProgram():
+    def __init__(self, id, sendq, recvq, lines=None):
+        self.id = id
+        self.reg = defaultdict(int)
+        self.reg['p'] = id
+        self.sendq = sendq
+        self.recvq = recvq
+        self.blocked = False
+        self.sent = 0
+        self.done = False
+        self.ins = []
+        self.size = 0
+        self.pc = 0
+        if lines:
+            self.load_program(lines)
+
+    def __repr__(self):
+        return "<Program[{}] pc={}/{} done={} block={} q={} reg={}>".format(self.id,
+                self.pc, self.size, int(self.done), int(self.blocked),
+                len(self.recvq), str(self.reg))
+
+    def load_program(self, lines):
+        for line in lines:
+            tok = line.strip().split()
+            assert len(tok) <= 3
+            if tok[0] == 'snd':
+                self.ins.append((tok[0], parse_value(tok[1])))
+            elif tok[0] == 'rcv':
+                self.ins.append((tok[0], tok[1]))
+            elif tok[0] == 'set':
+                self.ins.append((tok[0], tok[1], parse_value(tok[2])))
+            elif tok[0] == 'add':
+                self.ins.append((tok[0], tok[1], parse_value(tok[2])))
+            elif tok[0] == 'mul':
+                self.ins.append((tok[0], tok[1], parse_value(tok[2])))
+            elif tok[0] == 'mod':
+                self.ins.append((tok[0], tok[1], parse_value(tok[2])))
+            elif tok[0] == 'jgz':
+                self.ins.append((tok[0], parse_value(tok[1]), parse_value(tok[2])))
+        self.size = len(self.ins)
+        return self
+
+
+    def _value(self, obj):
+        """Return the integer value represented by the given Value object."""
+        if obj.reg:
+            return self.reg[obj.reg]
+        else:
+            return obj.val
+
+    def run(self):
+        while not self.done:
+            self.step()
+
+    def step(self):
+        try:
+            ins = self.ins[self.pc]
+            if ins[0] == 'snd':
+                self.sendq.append(self._value(ins[1]))
+                self.sent += 1
+                self.pc += 1
+            elif ins[0] == 'rcv':
+                if self.recvq:
+                    self.reg[ins[1]] = self.recvq.pop(0)
+                    self.pc += 1
+                    self.blocked = False
+                else:
+                    self.blocked = True
+            elif ins[0] == 'set':
+                self.reg[ins[1]] = self._value(ins[2])
+                self.pc += 1
+            elif ins[0] == 'add':
+                self.reg[ins[1]] += self._value(ins[2])
+                self.pc += 1
+            elif ins[0] == 'mul':
+                self.reg[ins[1]] *= self._value(ins[2])
+                self.pc += 1
+            elif ins[0] == 'mod':
+                self.reg[ins[1]] = self.reg[ins[1]] % self._value(ins[2])
+                self.pc += 1
+            elif ins[0] == 'jgz':
+                if self._value(ins[1]):
+                    self.pc += self._value(ins[2])
+                else:
+                    self.pc += 1
+        except IndexError:
+            self.done = True
+        return self
+
+def run_duet(lines):
+    q1 = list()
+    q2 = list()
+    prog1 = DuetProgram(0, q2, q1, lines=lines)
+    prog2 = DuetProgram(1, q1, q2, lines=lines)
+
+    while not ((prog1.done or prog1.blocked) and
+               (prog2.done or prog2.blocked)):
+        prog1.step()
+        prog2.step()
+
+    return prog1.sent
 
 # PART 1
 
 def example():
-    lines = sample_input()
+    text = """
+set a 1
+add a 2
+mul a a
+mod a 5
+snd a
+set a 0
+rcv a
+jgz a -1
+set a 1
+jgz a -2
+"""
+    lines = split_nonblank_lines(text)
     expected = 4
-    prog = Program(lines=lines)
+    prog = SoundProgram(lines=lines)
     result = prog.run(True)
     print("recovered sound = {} (expected {})".format(result, expected))
     assert result == expected
     print('= ' * 32)
 
 def part1(lines):
-    result = solve(lines)
+    prog = SoundProgram(lines=lines)
+    result = prog.run(True)
     print("result is {}".format(result))
     print('= ' * 32)
 
@@ -147,14 +256,30 @@ def part1(lines):
 # PART 2
 
 def example2():
+    text = """
+snd 1
+snd 2
+snd p
+rcv a
+rcv b
+rcv c
+rcv d
+"""
+    lines = split_nonblank_lines(text)
+    expected = 3
+    result = run_duet(lines)
+    print("prog1 sent {} msgs (expected {})".format(result, expected))
+    assert result == expected
     print('= ' * 32)
 
 def part2(lines):
+    result = run_duet(lines)
+    print("prog1 sent {} msgs".format(result))
     print('= ' * 32)
 
 if __name__ == '__main__':
     example()
-    # input = load_input(INPUTFILE)
-    # part1(input)
-    # example2()
-    # part2(input)
+    lines = load_input(INPUTFILE)
+    part1(lines)
+    example2()
+    part2(lines)
