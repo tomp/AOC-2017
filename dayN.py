@@ -2,6 +2,10 @@
 #
 #  Advent of Code 2017 - Day N
 #
+import logging
+
+logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logger = logging.getLogger()
 
 INPUTFILE = 'input.txt'
 
@@ -40,23 +44,23 @@ def example():
              ('arg2', 'expected2')]
     for arg, expected in cases:
         result = solve(arg)
-        print("'{}' -> {} (expected {})".format(arg, result, expected))
+        logger.info("'{}' -> {} (expected {})".format(arg, result, expected))
         assert result == expected
-    print('= ' * 32)
+    logger.info('= ' * 32)
 
 def part1(lines):
     result = solve(lines)
-    print("result is {}".format(result))
-    print('= ' * 32)
+    logger.info("result is {}".format(result))
+    logger.info('= ' * 32)
 
 
 # PART 2
 
 def example2():
-    print('= ' * 32)
+    logger.info('= ' * 32)
 
 def part2(lines):
-    print('= ' * 32)
+    logger.info('= ' * 32)
 
 if __name__ == '__main__':
     example()
