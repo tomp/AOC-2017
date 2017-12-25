@@ -3,6 +3,10 @@
 #  Advent of Code 2017 - Day 18
 #
 from collections import defaultdict, namedtuple
+import logging
+
+logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logger = logging.getLogger()
 
 INPUTFILE = 'input.txt'
 
@@ -138,9 +142,9 @@ class DuetProgram():
             self.load_program(lines)
 
     def __repr__(self):
-        return "<Program[{}] pc={}/{} done={} block={} q={} reg={}>".format(self.id,
+        return "prog{} @{} done={} block={} sent={} q={} reg={}>".format(self.id,
                 self.pc, self.size, int(self.done), int(self.blocked),
-                len(self.recvq), str(self.reg))
+                self.sent, len(self.recvq), str(dict(self.reg.items())))
 
     def load_program(self, lines):
         for line in lines:
@@ -182,9 +186,13 @@ class DuetProgram():
                 self.sendq.append(self._value(ins[1]))
                 self.sent += 1
                 self.pc += 1
+                logger.debug("prog{} @{} --> {}".format(self.id,
+                    self.pc, self._value(ins[1])))
             elif ins[0] == 'rcv':
                 if self.recvq:
                     self.reg[ins[1]] = self.recvq.pop(0)
+                    logger.debug("prog{} @{} <-- {}".format(self.id,
+                        self.pc, self.reg[ins[1]]))
                     self.pc += 1
                     self.blocked = False
                 else:
@@ -202,7 +210,8 @@ class DuetProgram():
                 self.reg[ins[1]] = self.reg[ins[1]] % self._value(ins[2])
                 self.pc += 1
             elif ins[0] == 'jgz':
-                if self._value(ins[1]):
+                logger.debug(str(self))
+                if self._value(ins[1]) > 0:
                     self.pc += self._value(ins[2])
                 else:
                     self.pc += 1
@@ -213,13 +222,13 @@ class DuetProgram():
 def run_duet(lines):
     q1 = list()
     q2 = list()
-    prog1 = DuetProgram(0, q2, q1, lines=lines)
-    prog2 = DuetProgram(1, q1, q2, lines=lines)
+    prog0 = DuetProgram(0, q2, q1, lines=lines)
+    prog1 = DuetProgram(1, q1, q2, lines=lines)
 
-    while not ((prog1.done or prog1.blocked) and
-               (prog2.done or prog2.blocked)):
+    while not ((prog0.done or prog0.blocked) and
+               (prog1.done or prog1.blocked)):
+        prog0.step()
         prog1.step()
-        prog2.step()
 
     return prog1.sent
 
@@ -242,15 +251,15 @@ jgz a -2
     expected = 4
     prog = SoundProgram(lines=lines)
     result = prog.run(True)
-    print("recovered sound = {} (expected {})".format(result, expected))
+    logger.info("recovered sound = {} (expected {})".format(result, expected))
     assert result == expected
-    print('= ' * 32)
+    logger.info('= ' * 32)
 
 def part1(lines):
     prog = SoundProgram(lines=lines)
     result = prog.run(True)
-    print("result is {}".format(result))
-    print('= ' * 32)
+    logger.info("result is {}".format(result))
+    logger.info('= ' * 32)
 
 
 # PART 2
@@ -268,14 +277,14 @@ rcv d
     lines = split_nonblank_lines(text)
     expected = 3
     result = run_duet(lines)
-    print("prog1 sent {} msgs (expected {})".format(result, expected))
+    logger.info("prog1 sent {} msgs (expected {})".format(result, expected))
     assert result == expected
-    print('= ' * 32)
+    logger.info('= ' * 32)
 
 def part2(lines):
     result = run_duet(lines)
-    print("prog1 sent {} msgs".format(result))
-    print('= ' * 32)
+    logger.info("prog1 sent {} msgs".format(result))
+    logger.info('= ' * 32)
 
 if __name__ == '__main__':
     example()
