@@ -1,0 +1,23 @@
+x1(t) = x1(0) + v1(0)*t + a1*t*(t + 1)/2
+x2(t) = x2(0) + v2(0)*t + a2*t*(t + 1)/2
+
+x2(t) - x1(t) = x2(0) - x1(0) + 
+                t * (v2(0) - v1(0)) +
+                t*(t+1)/2 * (a2 - a1)
+
+              = dx + t * (dv + da/2) + t^2 * da/2 
+
+If da != 0:
+
+   t = {-(dv + da/2) +/- sqrt((dv + da/2)^2 - 4*da/2*dx)}/da
+     = -(dv/da + 1/2) +/- sqrt{ dv*dv + da*da/4 + dv*da - 2*da*dx }/da
+     = -(dv/da + 1/2) +/- sqrt{ (dv/da)^2 + 1/4 + dv/da - 2*dx/da }
+
+If da == 0 and dv != 0:
+
+   t = -dx/dv
+
+If da == 0 and dv == 0:
+
+   t = 0 if dx = 0 
+
